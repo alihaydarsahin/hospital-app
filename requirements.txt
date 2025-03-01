@@ -34,7 +34,7 @@ flasgger==0.9.7.1
 apispec==6.3.1
 
 # Utils
-Pillow==10.1.0
+Pillow==11.1.0
 python-dateutil==2.8.2
 requests==2.31.0
 validators==0.22.0
