@@ -12,7 +12,7 @@ Flask-Caching==2.1.0
 Flask-SocketIO==5.3.6
 
 # Database
-SQLAlchemy==2.0.23
+SQLAlchemy==2.0.38
 psycopg2-binary==2.9.9
 alembic==1.13.1
 
