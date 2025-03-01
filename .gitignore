@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -20,43 +19,120 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Virtual Environment
 venv/
+env/
 ENV/
+.env
+.venv
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+.project
+.pydevproject
+*.sublime-workspace
+*.sublime-project
 
 # Database
 *.db
+*.sqlite
 *.sqlite3
+*.sql
 
 # Environment variables
 .env
-.env.production
+.env.*
+!.env.example
+production_secrets.txt
 
-# Logs
+# Logs and temporary files
 *.log
 logs/
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Media and Uploads
+media/
+uploads/
+static/uploads/
+app/static/uploads/
 
 # Local development
 .DS_Store
+Thumbs.db
+*.bak
+*.backup
+
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+
+# Monitoring and metrics
+prometheus/
+grafana/
+*.pid
+celerybeat-schedule
+celerybeat.pid
+
+# Deployment
+deploy.zip
+*.tar.gz
+*.zip
+*.rar
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.srl
+
+# Backup files
+backups/
+*.bak
+*.backup
+*~
+
+# Cache
+.cache/
+.webpack_cache/
+.eslintcache
+.mypy_cache/
 
 # Test coverage
 .coverage
-htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
 
-# Monitoring
-prometheus/
-grafana/
+# Documentation build
+docs/_build/
+site/
 
-# Deployment
-deploy.zip 
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# System Files
+.directory
+.Trash-*
+$RECYCLE.BIN/
+System Volume Information/ 
