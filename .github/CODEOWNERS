@@ -1,0 +1,22 @@
+# These owners will be the default owners for everything in the repo
+* @alihaydarsahin
+
+# Security-related files
+.github/workflows/security.yml @alihaydarsahin
+scripts/setup_github_protection.py @alihaydarsahin
+.zap/* @alihaydarsahin
+
+# Core application files
+app/* @alihaydarsahin
+
+# Database migrations
+migrations/* @alihaydarsahin
+
+# Configuration files
+*.yml @alihaydarsahin
+*.yaml @alihaydarsahin
+*.json @alihaydarsahin
+
+# Documentation
+*.md @alihaydarsahin
+docs/* @alihaydarsahin 
