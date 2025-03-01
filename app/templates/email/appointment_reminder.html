@@ -1,0 +1,36 @@
+{% extends "email/base_email.html" %}
+
+{% block title %}Appointment Reminder{% endblock %}
+
+{% block content %}
+<p>Dear {{ appointment.patient.user.full_name }},</p>
+
+<p>This is a reminder for your appointment tomorrow:</p>
+
+<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Doctor:</strong> Dr. {{ appointment.doctor.user.full_name }}</p>
+    <p style="margin: 5px 0;"><strong>Department:</strong> {{ appointment.doctor.department.name }}</p>
+    <p style="margin: 5px 0;"><strong>Date:</strong> {{ appointment.appointment_date.strftime('%B %d, %Y') }}</p>
+    <p style="margin: 5px 0;"><strong>Time:</strong> {{ appointment.appointment_time.strftime('%I:%M %p') }}</p>
+    <p style="margin: 5px 0;"><strong>Location:</strong> {{ appointment.doctor.department.location }}</p>
+</div>
+
+<p><strong>Important Notes:</strong></p>
+<ul>
+    <li>Please arrive 15 minutes before your appointment time</li>
+    <li>Bring any relevant medical records or test results</li>
+    <li>If you need to cancel or reschedule, please do so at least 24 hours in advance</li>
+</ul>
+
+<p>
+    <a href="{{ url_for('main.appointment_detail', id=appointment.id, _external=True) }}" class="button">
+        View Appointment Details
+    </a>
+</p>
+
+<p>
+    If you need to make any changes to your appointment, please visit our website or contact us directly.
+</p>
+
+<p>Best regards,<br>Hospital Management Team</p>
+{% endblock %} 

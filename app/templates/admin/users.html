@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}Kullanıcı Yönetimi - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sol Sidebar -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar min-vh-100">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Kullanıcılar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.doctors') }}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Doktorlar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.departments') }}">
+                            <i class="fas fa-hospital me-2"></i>
+                            Bölümler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.appointments') }}">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Randevular
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reviews') }}">
+                            <i class="fas fa-star me-2"></i>
+                            Değerlendirmeler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                            <i class="fas fa-cog me-2"></i>
+                            Ayarlar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Ana İçerik -->
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+            <!-- Başlık ve Butonlar -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+                <h1 class="h2">Kullanıcı Yönetimi</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus me-2"></i>Yeni Kullanıcı
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtreler -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Arama</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ request.args.get('search', '') }}" 
+                                   placeholder="Ad, soyad veya e-posta">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="role" class="form-label">Rol</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="">Tümü</option>
+                                <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>
+                                    Admin
+                                </option>
+                                <option value="doctor" {% if request.args.get('role') == 'doctor' %}selected{% endif %}>
+                                    Doktor
+                                </option>
+                                <option value="patient" {% if request.args.get('role') == 'patient' %}selected{% endif %}>
+                                    Hasta
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Durum</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Tümü</option>
+                                <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>
+                                    Aktif
+                                </option>
+                                <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>
+                                    Pasif
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort" class="form-label">Sıralama</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>
+                                    İsme göre
+                                </option>
+                                <option value="email" {% if request.args.get('sort') == 'email' %}selected{% endif %}>
+                                    E-postaya göre
+                                </option>
+                                <option value="created_at" {% if request.args.get('sort') == 'created_at' %}selected{% endif %}>
+                                    Kayıt tarihine göre
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrele
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Kullanıcı Listesi -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th>Kullanıcı</th>
+                                    <th>E-posta</th>
+                                    <th>Rol</th>
+                                    <th>Durum</th>
+                                    <th>Kayıt Tarihi</th>
+                                    <th>Son Giriş</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="{{ user.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if user.image %}
+                                            <img src="{{ url_for('static', filename='img/users/' + user.image) }}" 
+                                                 class="rounded-circle me-2" alt="{{ user.get_full_name() }}"
+                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-light me-2 d-flex align-items-center justify-content-center"
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-primary"></i>
+                                            </div>
+                                            {% endif %}
+                                            {{ user.get_full_name() }}
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger">Admin</span>
+                                        {% elif user.role == 'doctor' %}
+                                        <span class="badge bg-info">Doktor</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Hasta</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                        <span class="badge bg-success">Aktif</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Pasif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at|datetime }}</td>
+                                    <td>{{ user.last_login|datetime }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sayfalama -->
+                    {% if pages > 1 %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.users', page=page-1, **request.args) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.users', page=p, **request.args) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if page < pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.users', page=page+1, **request.args) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Yeni Kullanıcı Modalı -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Kullanıcı Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_user') }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">Ad</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Soyad</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="email" class="form-label">E-posta</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">Rol</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="patient">Hasta</option>
+                                <option value="doctor">Doktor</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Şifre</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for user in users %}
+<!-- Kullanıcı Düzenleme Modalı -->
+<div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kullanıcı Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.edit_user', id=user.id) }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="first_name{{ user.id }}" class="form-label">Ad</label>
+                            <input type="text" class="form-control" id="first_name{{ user.id }}" 
+                                   name="first_name" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name{{ user.id }}" class="form-label">Soyad</label>
+                            <input type="text" class="form-control" id="last_name{{ user.id }}" 
+                                   name="last_name" value="{{ user.last_name }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="email{{ user.id }}" class="form-label">E-posta</label>
+                            <input type="email" class="form-control" id="email{{ user.id }}" 
+                                   name="email" value="{{ user.email }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role{{ user.id }}" class="form-label">Rol</label>
+                            <select class="form-select" id="role{{ user.id }}" name="role" required>
+                                <option value="patient" {% if user.role == 'patient' %}selected{% endif %}>Hasta</option>
+                                <option value="doctor" {% if user.role == 'doctor' %}selected{% endif %}>Doktor</option>
+                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status{{ user.id }}" class="form-label">Durum</label>
+                            <select class="form-select" id="status{{ user.id }}" name="is_active" required>
+                                <option value="1" {% if user.is_active %}selected{% endif %}>Aktif</option>
+                                <option value="0" {% if not user.is_active %}selected{% endif %}>Pasif</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Kullanıcı Silme Modalı -->
+<div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kullanıcı Sil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>{{ user.get_full_name() }}</strong> adlı kullanıcıyı silmek istediğinizden emin misiniz?
+                </p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Bu işlem geri alınamaz!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <form method="POST" action="{{ url_for('admin.delete_user', id=user.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Sil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tümünü Seç
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('tbody .form-check-input');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            userCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    // Filtre formunu otomatik submit et
+    const filterForm = document.querySelector('form');
+    const filterInputs = filterForm.querySelectorAll('select');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => filterForm.submit());
+    });
+});
+</script>
+{% endblock %} 

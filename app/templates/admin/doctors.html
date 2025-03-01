@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}Doktor Yönetimi - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sol Sidebar -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar min-vh-100">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Kullanıcılar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.doctors') }}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Doktorlar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.departments') }}">
+                            <i class="fas fa-hospital me-2"></i>
+                            Bölümler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.appointments') }}">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Randevular
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reviews') }}">
+                            <i class="fas fa-star me-2"></i>
+                            Değerlendirmeler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                            <i class="fas fa-cog me-2"></i>
+                            Ayarlar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Ana İçerik -->
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+            <!-- Başlık ve Butonlar -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+                <h1 class="h2">Doktor Yönetimi</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDoctorModal">
+                        <i class="fas fa-plus me-2"></i>Yeni Doktor
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtreler -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Arama</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ request.args.get('search', '') }}" 
+                                   placeholder="Ad, soyad veya uzmanlık">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="department" class="form-label">Bölüm</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">Tümü</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" 
+                                        {% if request.args.get('department')|int == dept.id %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Durum</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Tümü</option>
+                                <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>
+                                    Aktif
+                                </option>
+                                <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>
+                                    Pasif
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort" class="form-label">Sıralama</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>
+                                    İsme göre
+                                </option>
+                                <option value="department" {% if request.args.get('sort') == 'department' %}selected{% endif %}>
+                                    Bölüme göre
+                                </option>
+                                <option value="rating" {% if request.args.get('sort') == 'rating' %}selected{% endif %}>
+                                    Puana göre
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrele
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Doktor Listesi -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th>Doktor</th>
+                                    <th>Bölüm</th>
+                                    <th>Uzmanlık</th>
+                                    <th>Puan</th>
+                                    <th>Randevu Sayısı</th>
+                                    <th>Durum</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doctor in doctors %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="{{ doctor.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if doctor.image %}
+                                            <img src="{{ url_for('static', filename='img/doctors/' + doctor.image) }}" 
+                                                 class="rounded-circle me-2" alt="{{ doctor.get_full_name() }}"
+                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-light me-2 d-flex align-items-center justify-content-center"
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user-md text-primary"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div>{{ doctor.get_full_name() }}</div>
+                                                <small class="text-muted">{{ doctor.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ doctor.department.name }}</td>
+                                    <td>{{ doctor.specialization }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="text-warning me-2">
+                                                {% for i in range(doctor.average_rating|round|int) %}
+                                                <i class="fas fa-star"></i>
+                                                {% endfor %}
+                                                {% for i in range(5 - doctor.average_rating|round|int) %}
+                                                <i class="far fa-star"></i>
+                                                {% endfor %}
+                                            </div>
+                                            <span>{{ "%.1f"|format(doctor.average_rating) }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-primary me-2">{{ doctor.total_appointments }}</span>
+                                            <small class="text-muted">
+                                                ({{ doctor.completed_appointments }} tamamlandı)
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if doctor.is_active %}
+                                        <span class="badge bg-success">Aktif</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Pasif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="modal" data-bs-target="#editDoctorModal{{ doctor.id }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    data-bs-toggle="modal" data-bs-target="#scheduleModal{{ doctor.id }}">
+                                                <i class="fas fa-clock"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteDoctorModal{{ doctor.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sayfalama -->
+                    {% if pages > 1 %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.doctors', page=page-1, **request.args) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.doctors', page=p, **request.args) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if page < pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.doctors', page=page+1, **request.args) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Yeni Doktor Modalı -->
+<div class="modal fade" id="addDoctorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Doktor Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_doctor') }}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">Ad</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Soyad</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">E-posta</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Telefon</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Bölüm</label>
+                            <select class="form-select" id="department" name="department_id" required>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="specialization" class="form-label">Uzmanlık</label>
+                            <input type="text" class="form-control" id="specialization" name="specialization" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="education" class="form-label">Eğitim Bilgileri</label>
+                            <textarea class="form-control" id="education" name="education" rows="3" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="experience" class="form-label">Deneyim</label>
+                            <textarea class="form-control" id="experience" name="experience" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="image" class="form-label">Fotoğraf</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Şifre</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for doctor in doctors %}
+<!-- Doktor Düzenleme Modalı -->
+<div class="modal fade" id="editDoctorModal{{ doctor.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Doktor Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.edit_doctor', id=doctor.id) }}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="first_name{{ doctor.id }}" class="form-label">Ad</label>
+                            <input type="text" class="form-control" id="first_name{{ doctor.id }}" 
+                                   name="first_name" value="{{ doctor.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name{{ doctor.id }}" class="form-label">Soyad</label>
+                            <input type="text" class="form-control" id="last_name{{ doctor.id }}" 
+                                   name="last_name" value="{{ doctor.last_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email{{ doctor.id }}" class="form-label">E-posta</label>
+                            <input type="email" class="form-control" id="email{{ doctor.id }}" 
+                                   name="email" value="{{ doctor.email }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone{{ doctor.id }}" class="form-label">Telefon</label>
+                            <input type="tel" class="form-control" id="phone{{ doctor.id }}" 
+                                   name="phone" value="{{ doctor.phone }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="department{{ doctor.id }}" class="form-label">Bölüm</label>
+                            <select class="form-select" id="department{{ doctor.id }}" name="department_id" required>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" 
+                                        {% if doctor.department_id == dept.id %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="specialization{{ doctor.id }}" class="form-label">Uzmanlık</label>
+                            <input type="text" class="form-control" id="specialization{{ doctor.id }}" 
+                                   name="specialization" value="{{ doctor.specialization }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="education{{ doctor.id }}" class="form-label">Eğitim Bilgileri</label>
+                            <textarea class="form-control" id="education{{ doctor.id }}" 
+                                      name="education" rows="3" required>{{ doctor.education }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="experience{{ doctor.id }}" class="form-label">Deneyim</label>
+                            <textarea class="form-control" id="experience{{ doctor.id }}" 
+                                      name="experience" rows="3" required>{{ doctor.experience }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="image{{ doctor.id }}" class="form-label">Fotoğraf</label>
+                            <input type="file" class="form-control" id="image{{ doctor.id }}" 
+                                   name="image" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status{{ doctor.id }}" class="form-label">Durum</label>
+                            <select class="form-select" id="status{{ doctor.id }}" name="is_active" required>
+                                <option value="1" {% if doctor.is_active %}selected{% endif %}>Aktif</option>
+                                <option value="0" {% if not doctor.is_active %}selected{% endif %}>Pasif</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Çalışma Saatleri Modalı -->
+<div class="modal fade" id="scheduleModal{{ doctor.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Çalışma Saatleri</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.update_schedule', id=doctor.id) }}">
+                <div class="modal-body">
+                    {% for day in ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'] %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ day }}</label>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="time" class="form-control" name="start_time_{{ loop.index0 }}"
+                                   value="{{ doctor.schedule[loop.index0].start_time if doctor.schedule[loop.index0] }}">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="time" class="form-control" name="end_time_{{ loop.index0 }}"
+                                   value="{{ doctor.schedule[loop.index0].end_time if doctor.schedule[loop.index0] }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Doktor Silme Modalı -->
+<div class="modal fade" id="deleteDoctorModal{{ doctor.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Doktor Sil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>Dr. {{ doctor.get_full_name() }}</strong> adlı doktoru silmek istediğinizden emin misiniz?
+                </p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Bu işlem geri alınamaz ve doktorun tüm randevuları iptal edilecektir!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <form method="POST" action="{{ url_for('admin.delete_doctor', id=doctor.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Sil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tümünü Seç
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const doctorCheckboxes = document.querySelectorAll('tbody .form-check-input');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            doctorCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    // Filtre formunu otomatik submit et
+    const filterForm = document.querySelector('form');
+    const filterInputs = filterForm.querySelectorAll('select');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => filterForm.submit());
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar min-vh-100">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.doctors') }}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Doctors
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.departments') }}">
+                            <i class="fas fa-hospital me-2"></i>
+                            Departments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.appointments') }}">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Appointments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reviews') }}">
+                            <i class="fas fa-star me-2"></i>
+                            Reviews
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                            <i class="fas fa-cog me-2"></i>
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+            <!-- Title -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                <h1 class="h2">Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-download me-1"></i>
+                            Download Report
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                        <i class="fas fa-calendar me-1"></i>
+                        This Week
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistic Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Total Patients</h6>
+                                    <h2 class="my-2">{{ stats.total_patients }}</h2>
+                                    <p class="mb-0 small">
+                                        <i class="fas fa-arrow-up me-1"></i>
+                                        {{ stats.new_patients }} new patients
+                                    </p>
+                                </div>
+                                <i class="fas fa-users fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Today's Appointments</h6>
+                                    <h2 class="my-2">{{ stats.today_appointments }}</h2>
+                                    <p class="mb-0 small">
+                                        {{ stats.completed_appointments }} completed
+                                    </p>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Active Doctors</h6>
+                                    <h2 class="my-2">{{ stats.active_doctors }}</h2>
+                                    <p class="mb-0 small">
+                                        in {{ stats.departments_count }} departments
+                                    </p>
+                                </div>
+                                <i class="fas fa-user-md fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Average Rating</h6>
+                                    <h2 class="my-2">{{ stats.average_rating }}</h2>
+                                    <p class="mb-0 small">
+                                        {{ stats.total_reviews }} reviews
+                                    </p>
+                                </div>
+                                <i class="fas fa-star fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Appointment Statistics</h5>
+                            <canvas id="appointmentsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Department Distribution</h5>
+                            <canvas id="departmentsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Recent Activities</h5>
+                        <a href="#" class="btn btn-sm btn-link">View All</a>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.action }}</td>
+                                    <td>{{ activity.user }}</td>
+                                    <td>{{ activity.date|datetime }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ activity.status_color }}">
+                                            {{ activity.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Appointment Statistics Chart
+    const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+    new Chart(appointmentsCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ appointment_stats.labels|tojson|safe }}'),
+            datasets: [{
+                label: 'Appointments',
+                data: JSON.parse('{{ appointment_stats.data|tojson|safe }}'),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Department Distribution Chart
+    const departmentsCtx = document.getElementById('departmentsChart').getContext('2d');
+    new Chart(departmentsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: JSON.parse('{{ department_stats.labels|tojson|safe }}'),
+            datasets: [{
+                data: JSON.parse('{{ department_stats.data|tojson|safe }}'),
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

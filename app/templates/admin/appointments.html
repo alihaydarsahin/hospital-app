@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+
+{% block title %}Randevu Yönetimi - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sol Sidebar -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar min-vh-100">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Kullanıcılar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.doctors') }}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Doktorlar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.departments') }}">
+                            <i class="fas fa-hospital me-2"></i>
+                            Bölümler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.appointments') }}">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Randevular
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reviews') }}">
+                            <i class="fas fa-star me-2"></i>
+                            Değerlendirmeler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                            <i class="fas fa-cog me-2"></i>
+                            Ayarlar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Ana İçerik -->
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+            <!-- Başlık ve İstatistikler -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+                <h1 class="h2">Randevu Yönetimi</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-download me-2"></i>Excel
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-print me-2"></i>Yazdır
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İstatistik Kartları -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Bugünkü Randevular</h6>
+                                    <h2 class="mt-2 mb-0">{{ today_appointments }}</h2>
+                                </div>
+                                <i class="fas fa-calendar-day fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Tamamlanan</h6>
+                                    <h2 class="mt-2 mb-0">{{ completed_appointments }}</h2>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Bekleyen</h6>
+                                    <h2 class="mt-2 mb-0">{{ pending_appointments }}</h2>
+                                </div>
+                                <i class="fas fa-clock fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">İptal Edilen</h6>
+                                    <h2 class="mt-2 mb-0">{{ cancelled_appointments }}</h2>
+                                </div>
+                                <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtreler -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Arama</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ request.args.get('search', '') }}" 
+                                   placeholder="Hasta veya doktor adı">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="department" class="form-label">Bölüm</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">Tümü</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" 
+                                        {% if request.args.get('department')|int == dept.id %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Durum</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Tümü</option>
+                                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>
+                                    Bekliyor
+                                </option>
+                                <option value="confirmed" {% if request.args.get('status') == 'confirmed' %}selected{% endif %}>
+                                    Onaylandı
+                                </option>
+                                <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>
+                                    Tamamlandı
+                                </option>
+                                <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>
+                                    İptal Edildi
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_range" class="form-label">Tarih Aralığı</label>
+                            <select class="form-select" id="date_range" name="date_range">
+                                <option value="today" {% if request.args.get('date_range') == 'today' %}selected{% endif %}>
+                                    Bugün
+                                </option>
+                                <option value="tomorrow" {% if request.args.get('date_range') == 'tomorrow' %}selected{% endif %}>
+                                    Yarın
+                                </option>
+                                <option value="week" {% if request.args.get('date_range') == 'week' %}selected{% endif %}>
+                                    Bu Hafta
+                                </option>
+                                <option value="month" {% if request.args.get('date_range') == 'month' %}selected{% endif %}>
+                                    Bu Ay
+                                </option>
+                                <option value="custom" {% if request.args.get('date_range') == 'custom' %}selected{% endif %}>
+                                    Özel Aralık
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrele
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Randevu Listesi -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th>Hasta</th>
+                                    <th>Doktor</th>
+                                    <th>Bölüm</th>
+                                    <th>Tarih & Saat</th>
+                                    <th>Durum</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in appointments %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="{{ appointment.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if appointment.patient.image %}
+                                            <img src="{{ url_for('static', filename='img/patients/' + appointment.patient.image) }}" 
+                                                 class="rounded-circle me-2" alt="{{ appointment.patient.get_full_name() }}"
+                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-light me-2 d-flex align-items-center justify-content-center"
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-primary"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div>{{ appointment.patient.get_full_name() }}</div>
+                                                <small class="text-muted">{{ appointment.patient.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if appointment.doctor.image %}
+                                            <img src="{{ url_for('static', filename='img/doctors/' + appointment.doctor.image) }}" 
+                                                 class="rounded-circle me-2" alt="Dr. {{ appointment.doctor.get_full_name() }}"
+                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-light me-2 d-flex align-items-center justify-content-center"
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user-md text-primary"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div>Dr. {{ appointment.doctor.get_full_name() }}</div>
+                                                <small class="text-muted">{{ appointment.doctor.specialization }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ appointment.department.name }}</td>
+                                    <td>
+                                        <div>
+                                            {{ appointment.date.strftime('%d.%m.%Y') }}
+                                            <br>
+                                            <small class="text-muted">{{ appointment.time.strftime('%H:%M') }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if appointment.status == 'pending' %}
+                                        <span class="badge bg-warning">Bekliyor</span>
+                                        {% elif appointment.status == 'confirmed' %}
+                                        <span class="badge bg-info">Onaylandı</span>
+                                        {% elif appointment.status == 'completed' %}
+                                        <span class="badge bg-success">Tamamlandı</span>
+                                        {% elif appointment.status == 'cancelled' %}
+                                        <span class="badge bg-danger">İptal Edildi</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="modal" data-bs-target="#viewAppointmentModal{{ appointment.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                    data-bs-toggle="modal" data-bs-target="#completeAppointmentModal{{ appointment.id }}"
+                                                    {% if appointment.status != 'confirmed' %}disabled{% endif %}>
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#cancelAppointmentModal{{ appointment.id }}"
+                                                    {% if appointment.status not in ['pending', 'confirmed'] %}disabled{% endif %}>
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sayfalama -->
+                    {% if pages > 1 %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.appointments', page=page-1, **request.args) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.appointments', page=p, **request.args) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if page < pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.appointments', page=page+1, **request.args) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% for appointment in appointments %}
+<!-- Randevu Detay Modalı -->
+<div class="modal fade" id="viewAppointmentModal{{ appointment.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Randevu Detayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6>Hasta Bilgileri</h6>
+                        <hr>
+                        <p><strong>Ad Soyad:</strong> {{ appointment.patient.get_full_name() }}</p>
+                        <p><strong>E-posta:</strong> {{ appointment.patient.email }}</p>
+                        <p><strong>Telefon:</strong> {{ appointment.patient.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Doktor Bilgileri</h6>
+                        <hr>
+                        <p><strong>Ad Soyad:</strong> Dr. {{ appointment.doctor.get_full_name() }}</p>
+                        <p><strong>Bölüm:</strong> {{ appointment.department.name }}</p>
+                        <p><strong>Uzmanlık:</strong> {{ appointment.doctor.specialization }}</p>
+                    </div>
+                    <div class="col-12">
+                        <h6>Randevu Bilgileri</h6>
+                        <hr>
+                        <p><strong>Tarih:</strong> {{ appointment.date.strftime('%d.%m.%Y') }}</p>
+                        <p><strong>Saat:</strong> {{ appointment.time.strftime('%H:%M') }}</p>
+                        <p><strong>Durum:</strong> 
+                            {% if appointment.status == 'pending' %}
+                            <span class="badge bg-warning">Bekliyor</span>
+                            {% elif appointment.status == 'confirmed' %}
+                            <span class="badge bg-info">Onaylandı</span>
+                            {% elif appointment.status == 'completed' %}
+                            <span class="badge bg-success">Tamamlandı</span>
+                            {% elif appointment.status == 'cancelled' %}
+                            <span class="badge bg-danger">İptal Edildi</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Şikayet:</strong> {{ appointment.reason }}</p>
+                        {% if appointment.notes %}
+                        <p><strong>Notlar:</strong> {{ appointment.notes }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Randevu Tamamlama Modalı -->
+<div class="modal fade" id="completeAppointmentModal{{ appointment.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Randevu Tamamla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.complete_appointment', id=appointment.id) }}">
+                <div class="modal-body">
+                    <p>Bu randevuyu tamamlamak istediğinizden emin misiniz?</p>
+                    <div class="mb-3">
+                        <label for="notes{{ appointment.id }}" class="form-label">Notlar</label>
+                        <textarea class="form-control" id="notes{{ appointment.id }}" 
+                                  name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-success">Tamamla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Randevu İptal Modalı -->
+<div class="modal fade" id="cancelAppointmentModal{{ appointment.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Randevu İptal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.cancel_appointment', id=appointment.id) }}">
+                <div class="modal-body">
+                    <p>Bu randevuyu iptal etmek istediğinizden emin misiniz?</p>
+                    <div class="mb-3">
+                        <label for="cancel_reason{{ appointment.id }}" class="form-label">İptal Nedeni</label>
+                        <textarea class="form-control" id="cancel_reason{{ appointment.id }}" 
+                                  name="cancel_reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-danger">İptal Et</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tümünü Seç
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const appointmentCheckboxes = document.querySelectorAll('tbody .form-check-input');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            appointmentCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    // Filtre formunu otomatik submit et
+    const filterForm = document.querySelector('form');
+    const filterInputs = filterForm.querySelectorAll('select');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => filterForm.submit());
+    });
+    
+    // Özel tarih aralığı seçildiğinde tarih seçicileri göster
+    const dateRangeSelect = document.getElementById('date_range');
+    const customDateInputs = document.getElementById('customDateInputs');
+    
+    if (dateRangeSelect && customDateInputs) {
+        dateRangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateInputs.classList.remove('d-none');
+            } else {
+                customDateInputs.classList.add('d-none');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Randevularım - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Başlık -->
+    <div class="bg-light rounded-3 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-2">Randevularım</h1>
+                <p class="text-muted mb-0">Tüm randevularınızı buradan yönetebilirsiniz</p>
+            </div>
+            <a href="{{ url_for('main.doctors') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Yeni Randevu
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Durum</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Tümü</option>
+                        <option value="upcoming" {% if request.args.get('status') == 'upcoming' %}selected{% endif %}>
+                            Yaklaşan Randevular
+                        </option>
+                        <option value="past" {% if request.args.get('status') == 'past' %}selected{% endif %}>
+                            Geçmiş Randevular
+                        </option>
+                        <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>
+                            İptal Edilenler
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="department" class="form-label">Bölüm</label>
+                    <select class="form-select" id="department" name="department">
+                        <option value="">Tümü</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" 
+                                {% if request.args.get('department')|int == dept.id %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="date_range" class="form-label">Tarih Aralığı</label>
+                    <select class="form-select" id="date_range" name="date_range">
+                        <option value="">Tümü</option>
+                        <option value="today" {% if request.args.get('date_range') == 'today' %}selected{% endif %}>
+                            Bugün
+                        </option>
+                        <option value="week" {% if request.args.get('date_range') == 'week' %}selected{% endif %}>
+                            Bu Hafta
+                        </option>
+                        <option value="month" {% if request.args.get('date_range') == 'month' %}selected{% endif %}>
+                            Bu Ay
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Filtrele
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Randevu Listesi -->
+    {% if appointments %}
+    <div class="row g-4">
+        {% for appointment in appointments %}
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm 
+                        {% if appointment.is_upcoming() %}border-primary{% endif %}
+                        {% if appointment.is_cancelled() %}border-danger{% endif %}">
+                <div class="card-body">
+                    <!-- Doktor Bilgileri -->
+                    <div class="d-flex align-items-center mb-3">
+                        {% if appointment.doctor.image %}
+                        <img src="{{ url_for('static', filename='img/doctors/' + appointment.doctor.image) }}" 
+                             class="rounded-circle me-3" alt="{{ appointment.doctor.get_full_name() }}"
+                             style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-light me-3 d-flex align-items-center justify-content-center"
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-user-md fa-2x text-primary"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <h5 class="card-title mb-1">Dr. {{ appointment.doctor.get_full_name() }}</h5>
+                            <p class="text-muted mb-0">{{ appointment.doctor.department.name }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Randevu Detayları -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar text-primary me-2"></i>
+                            <span>{{ appointment.date|date }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock text-primary me-2"></i>
+                            <span>{{ appointment.time|time }}</span>
+                        </div>
+                        {% if appointment.reason %}
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-info-circle text-primary me-2 mt-1"></i>
+                            <p class="mb-0 small">{{ appointment.reason }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Durum ve Aksiyonlar -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if appointment.is_upcoming() %}
+                            <span class="badge bg-primary">Yaklaşan</span>
+                            {% elif appointment.is_completed() %}
+                            <span class="badge bg-success">Tamamlandı</span>
+                            {% elif appointment.is_cancelled() %}
+                            <span class="badge bg-danger">İptal Edildi</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Geçmiş</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="btn-group">
+                            {% if appointment.is_upcoming() %}
+                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                    data-bs-toggle="modal" data-bs-target="#cancelModal{{ appointment.id }}">
+                                İptal Et
+                            </button>
+                            {% endif %}
+                            {% if appointment.is_completed() and not appointment.has_review %}
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="modal" data-bs-target="#reviewModal{{ appointment.id }}">
+                                Değerlendir
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- İptal Modalı -->
+        {% if appointment.is_upcoming() %}
+        <div class="modal fade" id="cancelModal{{ appointment.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Randevu İptali</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bu randevuyu iptal etmek istediğinizden emin misiniz?</p>
+                        <p class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            İptal edilen randevular geri alınamaz.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                        <form method="POST" action="{{ url_for('appointment.cancel_appointment', id=appointment.id) }}"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-danger">İptal Et</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Değerlendirme Modalı -->
+        {% if appointment.is_completed() and not appointment.has_review %}
+        <div class="modal fade" id="reviewModal{{ appointment.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Doktor Değerlendirmesi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('appointment.add_review', id=appointment.id) }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Puanınız</label>
+                                <div class="rating">
+                                    {% for i in range(5, 0, -1) %}
+                                    <input type="radio" name="rating" value="{{ i }}" id="rating{{ appointment.id }}{{ i }}"
+                                           {% if i == 5 %}checked{% endif %}>
+                                    <label for="rating{{ appointment.id }}{{ i }}">☆</label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="comment{{ appointment.id }}" class="form-label">Yorumunuz</label>
+                                <textarea class="form-control" id="comment{{ appointment.id }}" name="comment" 
+                                          rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                            <button type="submit" class="btn btn-primary">Gönder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    
+    <!-- Sayfalama -->
+    {% if pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('appointment.list_appointments', page=page-1, **request.args) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for p in range(max(1, page-2), min(pages+1, page+3)) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('appointment.list_appointments', page=p, **request.args) }}">
+                    {{ p }}
+                </a>
+            </li>
+            {% endfor %}
+            
+            {% if page < pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('appointment.list_appointments', page=page+1, **request.args) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <!-- Randevu Bulunamadı -->
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">Randevu Bulunamadı</h4>
+        <p class="text-muted mb-4">Seçilen kriterlere uygun randevu bulunmamaktadır.</p>
+        <a href="{{ url_for('main.doctors') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Yeni Randevu Al
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating input {
+    display: none;
+}
+
+.rating label {
+    cursor: pointer;
+    font-size: 30px;
+    color: #ddd;
+    padding: 0 2px;
+}
+
+.rating input:checked ~ label,
+.rating label:hover,
+.rating label:hover ~ label {
+    color: #ffc107;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtre formunu otomatik submit et
+    const filterForm = document.querySelector('form');
+    const filterInputs = filterForm.querySelectorAll('select');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => filterForm.submit());
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - {{ super() }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold mb-4">Your Health, Our Priority</h1>
+                <p class="lead">Book appointments online anytime, anywhere with our easy-to-use appointment system.</p>
+                {% if not current_user.is_authenticated %}
+                <div class="mt-4">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg me-3">Register Now</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">Login</a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='img/hero-image.png') }}" alt="Healthcare" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">{{ doctor_count }} Expert Doctors</h3>
+                        <p class="card-text">Experienced specialists at your service.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-hospital fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">{{ departments|length }} Departments</h3>
+                        <p class="card-text">Comprehensive healthcare services.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">Easy Appointments</h3>
+                        <p class="card-text">Book and manage appointments online.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Departments -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Our Departments</h2>
+        <div class="row g-4">
+            {% for dept in departments[:6] %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    {% if dept.image_url %}
+                    <img src="{{ dept.image_url }}" class="card-img-top" alt="{{ dept.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ dept.name }}</h5>
+                        <p class="card-text">{{ dept.description|truncate(100) }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ dept.doctor_count }} doctors</small>
+                            <a href="{{ url_for('main.department_detail', id=dept.id) }}" class="btn btn-outline-primary">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.departments') }}" class="btn btn-primary">View All Departments</a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="circle-icon mb-3">
+                        <i class="fas fa-user-plus fa-2x text-primary"></i>
+                    </div>
+                    <h4>1. Register</h4>
+                    <p>Create your account in minutes</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="circle-icon mb-3">
+                        <i class="fas fa-calendar-alt fa-2x text-primary"></i>
+                    </div>
+                    <h4>2. Book Appointment</h4>
+                    <p>Choose your doctor and preferred time</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="circle-icon mb-3">
+                        <i class="fas fa-check-circle fa-2x text-primary"></i>
+                    </div>
+                    <h4>3. Get Care</h4>
+                    <p>Visit the doctor and get treatment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">What Our Patients Say</h2>
+        <div class="row">
+            {% for review in featured_reviews %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {% for i in range(5) %}
+                            <i class="fas fa-star {% if i < review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <p class="card-text">{{ review.review_text|truncate(150) }}</p>
+                        <footer class="blockquote-footer mt-3">
+                            {% if review.is_anonymous %}
+                            Anonymous
+                            {% else %}
+                            {{ review.user.full_name }}
+                            {% endif %}
+                        </footer>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %} 

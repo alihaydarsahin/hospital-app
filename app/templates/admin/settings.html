@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Sistem Ayarları - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sol Sidebar -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar min-vh-100">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Kullanıcılar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.doctors') }}">
+                            <i class="fas fa-user-md me-2"></i>
+                            Doktorlar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.departments') }}">
+                            <i class="fas fa-hospital me-2"></i>
+                            Bölümler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.appointments') }}">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Randevular
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reviews') }}">
+                            <i class="fas fa-star me-2"></i>
+                            Değerlendirmeler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.settings') }}">
+                            <i class="fas fa-cog me-2"></i>
+                            Ayarlar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Ana İçerik -->
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+            <!-- Başlık -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+                <h1 class="h2">Sistem Ayarları</h1>
+            </div>
+
+            <!-- Ayarlar Kartları -->
+            <div class="row">
+                <!-- Genel Ayarlar -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-cogs me-2"></i>
+                                Genel Ayarlar
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin.update_general_settings') }}">
+                                <div class="mb-3">
+                                    <label for="site_name" class="form-label">Site Adı</label>
+                                    <input type="text" class="form-control" id="site_name" name="site_name"
+                                           value="{{ settings.site_name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="site_description" class="form-label">Site Açıklaması</label>
+                                    <textarea class="form-control" id="site_description" name="site_description" 
+                                              rows="3">{{ settings.site_description }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contact_email" class="form-label">İletişim E-posta</label>
+                                    <input type="email" class="form-control" id="contact_email" name="contact_email"
+                                           value="{{ settings.contact_email }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contact_phone" class="form-label">İletişim Telefon</label>
+                                    <input type="tel" class="form-control" id="contact_phone" name="contact_phone"
+                                           value="{{ settings.contact_phone }}" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Kaydet
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E-posta Ayarları -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-envelope me-2"></i>
+                                E-posta Ayarları
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin.update_email_settings') }}">
+                                <div class="mb-3">
+                                    <label for="smtp_server" class="form-label">SMTP Sunucu</label>
+                                    <input type="text" class="form-control" id="smtp_server" name="smtp_server"
+                                           value="{{ settings.smtp_server }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_port" class="form-label">SMTP Port</label>
+                                    <input type="number" class="form-control" id="smtp_port" name="smtp_port"
+                                           value="{{ settings.smtp_port }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_username" class="form-label">SMTP Kullanıcı Adı</label>
+                                    <input type="text" class="form-control" id="smtp_username" name="smtp_username"
+                                           value="{{ settings.smtp_username }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_password" class="form-label">SMTP Şifre</label>
+                                    <input type="password" class="form-control" id="smtp_password" name="smtp_password"
+                                           value="{{ settings.smtp_password }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="smtp_ssl" name="smtp_ssl"
+                                               {% if settings.smtp_ssl %}checked{% endif %}>
+                                        <label class="form-check-label" for="smtp_ssl">
+                                            SSL Kullan
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Kaydet
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="testEmailSettings()">
+                                    <i class="fas fa-paper-plane me-2"></i>Test Et
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Randevu Ayarları -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Randevu Ayarları
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin.update_appointment_settings') }}">
+                                <div class="mb-3">
+                                    <label for="appointment_interval" class="form-label">Randevu Aralığı (Dakika)</label>
+                                    <input type="number" class="form-control" id="appointment_interval" 
+                                           name="appointment_interval" value="{{ settings.appointment_interval }}" 
+                                           min="15" max="60" step="15" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="max_appointments_per_day" class="form-label">
+                                        Günlük Maksimum Randevu Sayısı
+                                    </label>
+                                    <input type="number" class="form-control" id="max_appointments_per_day" 
+                                           name="max_appointments_per_day" 
+                                           value="{{ settings.max_appointments_per_day }}" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="working_hours_start" class="form-label">Çalışma Saati Başlangıç</label>
+                                    <input type="time" class="form-control" id="working_hours_start" 
+                                           name="working_hours_start" value="{{ settings.working_hours_start }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="working_hours_end" class="form-label">Çalışma Saati Bitiş</label>
+                                    <input type="time" class="form-control" id="working_hours_end" 
+                                           name="working_hours_end" value="{{ settings.working_hours_end }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="weekend_appointments" 
+                                               name="weekend_appointments" 
+                                               {% if settings.weekend_appointments %}checked{% endif %}>
+                                        <label class="form-check-label" for="weekend_appointments">
+                                            Hafta Sonu Randevulara İzin Ver
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Kaydet
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bildirim Ayarları -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-bell me-2"></i>
+                                Bildirim Ayarları
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin.update_notification_settings') }}">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="email_notifications" 
+                                               name="email_notifications" 
+                                               {% if settings.email_notifications %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_notifications">
+                                            E-posta Bildirimleri
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="sms_notifications" 
+                                               name="sms_notifications" 
+                                               {% if settings.sms_notifications %}checked{% endif %}>
+                                        <label class="form-check-label" for="sms_notifications">
+                                            SMS Bildirimleri
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reminder_time" class="form-label">
+                                        Randevu Hatırlatma Süresi (Saat)
+                                    </label>
+                                    <input type="number" class="form-control" id="reminder_time" name="reminder_time"
+                                           value="{{ settings.reminder_time }}" min="1" max="48" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="sms_api_key" class="form-label">SMS API Anahtarı</label>
+                                    <input type="text" class="form-control" id="sms_api_key" name="sms_api_key"
+                                           value="{{ settings.sms_api_key }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="sms_sender" class="form-label">SMS Gönderen Adı</label>
+                                    <input type="text" class="form-control" id="sms_sender" name="sms_sender"
+                                           value="{{ settings.sms_sender }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Kaydet
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="testSMSSettings()">
+                                    <i class="fas fa-paper-plane me-2"></i>Test Et
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function testEmailSettings() {
+    fetch("{{ url_for('admin.test_email_settings') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Test e-postası başarıyla gönderildi!');
+        } else {
+            alert('Test e-postası gönderilemedi: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Bir hata oluştu: ' + error);
+    });
+}
+
+function testSMSSettings() {
+    fetch("{{ url_for('admin.test_sms_settings') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Test SMS\'i başarıyla gönderildi!');
+        } else {
+            alert('Test SMS\'i gönderilemedi: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Bir hata oluştu: ' + error);
+    });
+}
+</script>
+{% endblock %} 

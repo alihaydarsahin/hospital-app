@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Dr. {{ doctor.get_full_name() }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Doktor Bilgileri -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    {% if doctor.image %}
+                    <img src="{{ url_for('static', filename='img/doctors/' + doctor.image) }}" 
+                         class="rounded-circle mb-4" alt="{{ doctor.get_full_name() }}"
+                         style="width: 200px; height: 200px; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='img/default-doctor.png') }}" 
+                         class="rounded-circle mb-4" alt="Default Doctor Image"
+                         style="width: 200px; height: 200px; object-fit: cover;">
+                    {% endif %}
+                    
+                    <h3 class="card-title mb-1">Dr. {{ doctor.get_full_name() }}</h3>
+                    <p class="text-muted mb-3">{{ doctor.department.name }}</p>
+                    
+                    {% if doctor.rating %}
+                    <div class="mb-3">
+                        {% for i in range(doctor.rating|round|int) %}
+                        <i class="fas fa-star text-warning"></i>
+                        {% endfor %}
+                        {% for i in range(5 - doctor.rating|round|int) %}
+                        <i class="far fa-star text-warning"></i>
+                        {% endfor %}
+                        <p class="text-muted mt-1">({{ doctor.rating_count }} değerlendirme)</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        {% if current_user.is_authenticated %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" 
+                                data-bs-target="#appointmentModal">
+                            <i class="fas fa-calendar-plus"></i> Randevu Al
+                        </button>
+                        {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+                            Randevu için Giriş Yapın
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detaylı Bilgiler -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Hakkında</h4>
+                    
+                    <div class="mb-4">
+                        <h6><i class="fas fa-stethoscope me-2"></i>Uzmanlık Alanı</h6>
+                        <p>{{ doctor.specialization }}</p>
+                    </div>
+                    
+                    {% if doctor.education %}
+                    <div class="mb-4">
+                        <h6><i class="fas fa-graduation-cap me-2"></i>Eğitim</h6>
+                        <p>{{ doctor.education }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if doctor.experience %}
+                    <div class="mb-4">
+                        <h6><i class="fas fa-briefcase me-2"></i>Deneyim</h6>
+                        <p>{{ doctor.experience }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if doctor.certifications %}
+                    <div class="mb-4">
+                        <h6><i class="fas fa-certificate me-2"></i>Sertifikalar</h6>
+                        <ul class="list-unstyled">
+                            {% for cert in doctor.certifications %}
+                            <li><i class="fas fa-check text-success me-2"></i>{{ cert }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if doctor.languages %}
+                    <div class="mb-4">
+                        <h6><i class="fas fa-language me-2"></i>Konuştuğu Diller</h6>
+                        <p>{{ doctor.languages|join(', ') }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Çalışma Saatleri -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Çalışma Saatleri</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Gün</th>
+                                    <th>Saat Aralığı</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in doctor.schedules %}
+                                <tr>
+                                    <td>{{ schedule.day }}</td>
+                                    <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                    <td>
+                                        {% if schedule.is_available %}
+                                        <span class="badge bg-success">Müsait</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Müsait Değil</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hasta Değerlendirmeleri -->
+            {% if reviews %}
+            <div class="card shadow">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Hasta Değerlendirmeleri</h4>
+                    
+                    {% for review in reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-0">{{ review.patient.get_full_name() }}</h6>
+                                <small class="text-muted">{{ review.created_at|date }}</small>
+                            </div>
+                            <div>
+                                {% for i in range(review.rating) %}
+                                <i class="fas fa-star text-warning"></i>
+                                {% endfor %}
+                                {% for i in range(5 - review.rating) %}
+                                <i class="far fa-star text-warning"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="mb-0">{{ review.comment }}</p>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if reviews|length >= 5 %}
+                    <div class="text-center mt-3">
+                        <button class="btn btn-outline-primary" id="loadMoreReviews">
+                            Daha Fazla Göster
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Randevu Modal -->
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="appointmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Randevu Al</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="appointmentForm" method="POST" 
+                      action="{{ url_for('appointment.make_appointment', doctor_id=doctor.id) }}">
+                    {{ form.csrf_token }}
+                    
+                    <div class="mb-3">
+                        <label for="appointment_date" class="form-label">Randevu Tarihi</label>
+                        <input type="date" class="form-control" id="appointment_date" name="date" required
+                               min="{{ today }}" max="{{ max_date }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="appointment_time" class="form-label">Randevu Saati</label>
+                        <select class="form-select" id="appointment_time" name="time" required disabled>
+                            <option value="">Önce tarih seçin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Randevu Nedeni</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Randevu Oluştur</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('appointment_date');
+    const timeSelect = document.getElementById('appointment_time');
+    
+    if (dateInput && timeSelect) {
+        dateInput.addEventListener('change', function() {
+            if (this.value) {
+                fetch(`/api/available-slots/{{ doctor.id }}/${this.value}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        timeSelect.innerHTML = '<option value="">Saat seçin</option>';
+                        data.slots.forEach(slot => {
+                            const option = document.createElement('option');
+                            option.value = slot;
+                            option.textContent = slot;
+                            timeSelect.appendChild(option);
+                        });
+                        timeSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        timeSelect.innerHTML = '<option value="">Hata oluştu</option>';
+                        timeSelect.disabled = true;
+                    });
+            } else {
+                timeSelect.innerHTML = '<option value="">Önce tarih seçin</option>';
+                timeSelect.disabled = true;
+            }
+        });
+    }
+    
+    const loadMoreBtn = document.getElementById('loadMoreReviews');
+    if (loadMoreBtn) {
+        let page = 2;
+        loadMoreBtn.addEventListener('click', function() {
+            fetch(`/api/doctor/{{ doctor.id }}/reviews?page=${page}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.reviews.length > 0) {
+                        const container = loadMoreBtn.parentElement.parentElement;
+                        data.reviews.forEach(review => {
+                            container.insertBefore(createReviewElement(review), loadMoreBtn.parentElement);
+                        });
+                        page++;
+                        if (!data.has_more) {
+                            loadMoreBtn.parentElement.remove();
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    }
+});
+
+function createReviewElement(review) {
+    const div = document.createElement('div');
+    div.className = 'border-bottom pb-3 mb-3';
+    div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <h6 class="mb-0">${review.patient_name}</h6>
+                <small class="text-muted">${review.created_at}</small>
+            </div>
+            <div>
+                ${Array(review.rating).fill('<i class="fas fa-star text-warning"></i>').join('')}
+                ${Array(5 - review.rating).fill('<i class="far fa-star text-warning"></i>').join('')}
+            </div>
+        </div>
+        <p class="mb-0">${review.comment}</p>
+    `;
+    return div;
+}
+</script>
+{% endblock %} 

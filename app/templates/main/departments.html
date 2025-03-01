@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Bölümlerimiz - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="bg-light rounded-3 p-5 mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 mb-3">Bölümlerimiz</h1>
+                <p class="lead mb-0">
+                    Hastanemizde bulunan {{ departments|length }} farklı bölüm ile sağlığınız için hizmetinizdeyiz.
+                </p>
+            </div>
+            <div class="col-md-4 text-center">
+                <i class="fas fa-hospital-alt fa-5x text-primary"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arama -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <div class="input-group">
+                <span class="input-group-text bg-white">
+                    <i class="fas fa-search text-primary"></i>
+                </span>
+                <input type="text" id="departmentSearch" class="form-control" 
+                       placeholder="Bölüm ara...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bölümler Listesi -->
+    <div class="row g-4" id="departmentsList">
+        {% for department in departments %}
+        <div class="col-md-6 col-lg-4 department-item">
+            <div class="card h-100 shadow-sm">
+                {% if department.image %}
+                <img src="{{ url_for('static', filename='img/departments/' + department.image) }}" 
+                     class="card-img-top" alt="{{ department.name }}"
+                     style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light text-center py-5">
+                    <i class="fas fa-stethoscope fa-4x text-primary"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ department.name }}</h5>
+                    <p class="card-text text-muted">{{ department.description }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                <i class="fas fa-user-md"></i> {{ department.doctors|length }} Doktor
+                            </small>
+                        </div>
+                        <a href="{{ url_for('main.department_detail', id=department.id) }}" 
+                           class="btn btn-outline-primary">
+                            Detaylar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bölüm Bulunamadı -->
+    <div id="noDepartment" class="text-center py-5 d-none">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Bölüm Bulunamadı</h4>
+        <p class="text-muted mb-0">Arama kriterlerinize uygun bölüm bulunamadı.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('departmentSearch');
+    const departmentsList = document.getElementById('departmentsList');
+    const noDepartment = document.getElementById('noDepartment');
+    const departments = document.querySelectorAll('.department-item');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let hasResults = false;
+        
+        departments.forEach(dept => {
+            const title = dept.querySelector('.card-title').textContent.toLowerCase();
+            const description = dept.querySelector('.card-text').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                dept.style.display = '';
+                hasResults = true;
+            } else {
+                dept.style.display = 'none';
+            }
+        });
+        
+        departmentsList.style.display = hasResults ? '' : 'none';
+        noDepartment.classList.toggle('d-none', hasResults);
+    });
+});
+</script>
+{% endblock %} 

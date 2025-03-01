@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Our Doctors - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="search" class="form-label">Search Doctor</label>
+                <input type="text" class="form-control" id="search" placeholder="Enter doctor name or specialization">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="department" class="form-label">Department</label>
+                <select class="form-select" id="department">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sort Options -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary" data-sort="rating">
+                    By Rating
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-sort="experience">
+                    By Experience
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-sort="department">
+                    By Department
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctor List -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for doctor in doctors %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ doctor.user.profile_image or url_for('static', filename='img/default-doctor.png') }}" 
+                             class="rounded-circle me-3" alt="Doctor" style="width: 64px; height: 64px;">
+                        <div>
+                            <h5 class="card-title mb-0">Dr. {{ doctor.user.full_name }}</h5>
+                            <p class="card-text text-muted mb-0">{{ doctor.specialization }}</p>
+                            <p class="card-text text-muted">{{ doctor.department.name }}</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="ratings">
+                                {% for i in range(5) %}
+                                <i class="fas fa-star {% if i < doctor.average_rating|int %}text-warning{% else %}text-muted{% endif %}"></i>
+                                {% endfor %}
+                                <span class="ms-1 text-muted">({{ doctor.total_reviews }})</span>
+                            </div>
+                            <span class="badge bg-primary">{{ doctor.experience_years }} years exp.</span>
+                        </div>
+                    </div>
+                    <p class="card-text">{{ doctor.bio|truncate(150) }}</p>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Consultation Fee:</small><br>
+                            <strong>${{ doctor.consultation_fee }}</strong>
+                        </div>
+                        {% if current_user.is_authenticated and current_user.is_patient() %}
+                        <a href="{{ url_for('main.book_appointment', doctor_id=doctor.id) }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus"></i> Book Appointment
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                            Login to Book
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if doctors.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for page in doctors.iter_pages() %}
+                {% if page %}
+                    <li class="page-item {% if page == doctors.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.doctors', page=page) }}">{{ page }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const departmentSelect = document.getElementById('department');
+    const sortButtons = document.querySelectorAll('[data-sort]');
+    
+    function updateDoctors() {
+        const searchTerm = searchInput.value;
+        const departmentId = departmentSelect.value;
+        const sortBy = document.querySelector('[data-sort].active')?.dataset.sort;
+        
+        fetch(`/api/doctors/search?q=${searchTerm}&department=${departmentId}&sort=${sortBy || ''}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update the doctor list with the filtered results
+                // Implementation depends on your frontend structure
+            });
+    }
+    
+    searchInput.addEventListener('input', updateDoctors);
+    departmentSelect.addEventListener('change', updateDoctors);
+    
+    sortButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            sortButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            updateDoctors();
+        });
+    });
+});
+</script>
+{% endblock %} 

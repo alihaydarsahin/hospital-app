@@ -1,0 +1,50 @@
+{% extends "email/base_email.html" %}
+
+{% block title %}Welcome to Hospital Management System{% endblock %}
+
+{% block content %}
+<p>Dear {{ user.full_name }},</p>
+
+<p>
+    Welcome to Hospital Management System! We're excited to have you as a member of our community. 
+    Your account has been successfully created and you can now access all our services.
+</p>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+    <h3 style="margin-top: 0;">What you can do now:</h3>
+    <ul style="padding-left: 20px;">
+        <li>Book appointments with our expert doctors</li>
+        <li>View and manage your appointments</li>
+        <li>Access your medical history</li>
+        <li>Receive appointment reminders</li>
+        <li>Get online consultations</li>
+    </ul>
+</div>
+
+<p>
+    To get started, click the button below to log in to your account:
+</p>
+
+<p>
+    <a href="{{ url_for('auth.login', _external=True) }}" class="button">
+        Login to Your Account
+    </a>
+</p>
+
+<p>
+    If you have any questions or need assistance, our support team is here to help.
+    You can reach us at <a href="mailto:support@hospital.com">support@hospital.com</a>.
+</p>
+
+<p>
+    We look forward to providing you with excellent healthcare services!
+</p>
+
+<p>Best regards,<br>Hospital Management Team</p>
+
+<div style="font-size: 12px; color: #666; margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee;">
+    <p>
+        For your security: If you didn't create this account, please contact us immediately.
+    </p>
+</div>
+{% endblock %} 

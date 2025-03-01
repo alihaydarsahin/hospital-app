@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Randevu Al - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Başlık -->
+    <div class="bg-light rounded-3 p-4 mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-3">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('main.index') }}" class="text-decoration-none">Ana Sayfa</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('main.doctors') }}" class="text-decoration-none">Doktorlar</a>
+                </li>
+                <li class="breadcrumb-item active">Randevu Al</li>
+            </ol>
+        </nav>
+        
+        <h1 class="h3 mb-0">Randevu Oluştur</h1>
+    </div>
+
+    <div class="row">
+        <!-- Randevu Formu -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST" id="appointmentForm">
+                        {{ form.csrf_token }}
+                        
+                        <!-- Doktor Bilgileri -->
+                        <div class="mb-4">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-user-md text-primary me-2"></i>Doktor Bilgileri
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                {% if doctor.image %}
+                                <img src="{{ url_for('static', filename='img/doctors/' + doctor.image) }}" 
+                                     class="rounded-circle me-3" alt="{{ doctor.get_full_name() }}"
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-light me-3 d-flex align-items-center justify-content-center"
+                                     style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user-md fa-3x text-primary"></i>
+                                </div>
+                                {% endif %}
+                                
+                                <div>
+                                    <h5 class="mb-1">Dr. {{ doctor.get_full_name() }}</h5>
+                                    <p class="text-muted mb-0">{{ doctor.department.name }} - {{ doctor.specialization }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Randevu Tarihi ve Saati -->
+                        <div class="mb-4">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-calendar-alt text-primary me-2"></i>Randevu Zamanı
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="appointment_date" class="form-label">Tarih</label>
+                                    <input type="date" class="form-control" id="appointment_date" name="date" required
+                                           min="{{ today }}" max="{{ max_date }}">
+                                    <div class="form-text">En fazla 30 gün sonrasına randevu alabilirsiniz.</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="appointment_time" class="form-label">Saat</label>
+                                    <select class="form-select" id="appointment_time" name="time" required disabled>
+                                        <option value="">Önce tarih seçin</option>
+                                    </select>
+                                    <div class="form-text">Seçilen tarihteki müsait saatler gösterilecektir.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Randevu Detayları -->
+                        <div class="mb-4">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-info-circle text-primary me-2"></i>Randevu Detayları
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">Randevu Nedeni</label>
+                                <textarea class="form-control" id="reason" name="reason" rows="3" required
+                                          placeholder="Randevu alma nedeninizi kısaca açıklayın..."></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="symptoms" class="form-label">Belirtiler (Opsiyonel)</label>
+                                <textarea class="form-control" id="symptoms" name="symptoms" rows="3"
+                                          placeholder="Varsa şikayetlerinizi ve belirtileri yazın..."></textarea>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="first_time" name="first_time">
+                                <label class="form-check-label" for="first_time">
+                                    İlk kez bu doktora görünüyorum
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Onay ve Gönder -->
+                        <div class="mb-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" 
+                                       data-bs-target="#termsModal">Randevu şartlarını</a> okudum ve kabul ediyorum
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-calendar-check me-2"></i>Randevuyu Onayla
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sağ Sidebar -->
+        <div class="col-lg-4">
+            <!-- Doktor Çalışma Saatleri -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-clock text-primary me-2"></i>Çalışma Saatleri
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        {% for schedule in doctor.schedules %}
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span>{{ schedule.day }}</span>
+                            <span class="text-primary">{{ schedule.start_time }} - {{ schedule.end_time }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Randevu Bilgileri -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Önemli Bilgiler
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-clock text-warning me-2"></i>
+                            Randevu süresi {{ appointment_duration }} dakikadır
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-day text-warning me-2"></i>
+                            En fazla 30 gün sonrasına randevu alabilirsiniz
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-times text-warning me-2"></i>
+                            Randevunuzu 24 saat öncesine kadar iptal edebilirsiniz
+                        </li>
+                        <li>
+                            <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                            Randevunuza 15 dakika önce gelmeniz önerilir
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Şartlar Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Randevu Şartları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Randevu Kuralları</h6>
+                <ul>
+                    <li>Randevunuza zamanında gelmelisiniz</li>
+                    <li>Randevunuzu en geç 24 saat öncesinden iptal edebilirsiniz</li>
+                    <li>Üst üste 3 kez randevunuza gelmemeniz durumunda hesabınız askıya alınabilir</li>
+                </ul>
+                
+                <h6>2. Kişisel Veriler</h6>
+                <p>Randevu sırasında paylaştığınız bilgiler gizlilik politikamız kapsamında korunmaktadır...</p>
+                
+                <h6>3. İptal ve Değişiklik</h6>
+                <p>Doktorunuzun programında değişiklik olması durumunda size önceden haber verilecektir...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('appointment_date');
+    const timeSelect = document.getElementById('appointment_time');
+    
+    if (dateInput && timeSelect) {
+        dateInput.addEventListener('change', function() {
+            if (this.value) {
+                fetch(`/api/available-slots/{{ doctor.id }}/${this.value}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        timeSelect.innerHTML = '<option value="">Saat seçin</option>';
+                        data.slots.forEach(slot => {
+                            const option = document.createElement('option');
+                            option.value = slot;
+                            option.textContent = slot;
+                            timeSelect.appendChild(option);
+                        });
+                        timeSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        timeSelect.innerHTML = '<option value="">Hata oluştu</option>';
+                        timeSelect.disabled = true;
+                    });
+            } else {
+                timeSelect.innerHTML = '<option value="">Önce tarih seçin</option>';
+                timeSelect.disabled = true;
+            }
+        });
+    }
+    
+    const appointmentForm = document.getElementById('appointmentForm');
+    if (appointmentForm) {
+        appointmentForm.addEventListener('submit', function(e) {
+            const date = dateInput.value;
+            const time = timeSelect.value;
+            
+            if (!date || !time) {
+                e.preventDefault();
+                alert('Lütfen randevu tarihi ve saati seçin');
+                return;
+            }
+            
+            const today = new Date();
+            const selectedDate = new Date(date + 'T' + time);
+            
+            if (selectedDate < today) {
+                e.preventDefault();
+                alert('Geçmiş bir tarih seçemezsiniz');
+                return;
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

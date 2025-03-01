@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}{{ department.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Bölüm Başlık -->
+    <div class="bg-light rounded-3 p-5 mb-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-3">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('main.departments') }}" class="text-decoration-none">
+                                Bölümler
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ department.name }}</li>
+                    </ol>
+                </nav>
+                
+                <h1 class="display-4 mb-3">{{ department.name }}</h1>
+                <p class="lead mb-4">{{ department.description }}</p>
+                
+                <div class="d-flex gap-4">
+                    <div>
+                        <i class="fas fa-user-md text-primary me-2"></i>
+                        <span class="fw-bold">{{ department.doctors|length }}</span> Doktor
+                    </div>
+                    <div>
+                        <i class="fas fa-procedures text-primary me-2"></i>
+                        <span class="fw-bold">{{ department.patient_count }}</span> Hasta
+                    </div>
+                    <div>
+                        <i class="fas fa-calendar-check text-primary me-2"></i>
+                        <span class="fw-bold">{{ department.appointment_count }}</span> Randevu
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                {% if department.image %}
+                <img src="{{ url_for('static', filename='img/departments/' + department.image) }}" 
+                     class="img-fluid rounded" alt="{{ department.name }}">
+                {% else %}
+                <i class="fas fa-hospital-alt fa-6x text-primary"></i>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bölüm Detayları -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <!-- Hizmetler -->
+            {% if department.services %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">
+                        <i class="fas fa-list-ul text-primary me-2"></i>Sunulan Hizmetler
+                    </h4>
+                    <div class="row g-4">
+                        {% for service in department.services %}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span>{{ service }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ekipmanlar -->
+            {% if department.equipment %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">
+                        <i class="fas fa-microscope text-primary me-2"></i>Tıbbi Ekipmanlar
+                    </h4>
+                    <div class="row g-4">
+                        {% for equipment in department.equipment %}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-circle text-primary me-2"></i>
+                                <span>{{ equipment }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Doktorlar -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">
+                        <i class="fas fa-user-md text-primary me-2"></i>Bölüm Doktorları
+                    </h4>
+                    
+                    <div class="row g-4">
+                        {% for doctor in department.doctors %}
+                        <div class="col-md-6">
+                            <div class="card h-100 border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if doctor.image %}
+                                        <img src="{{ url_for('static', filename='img/doctors/' + doctor.image) }}" 
+                                             class="rounded-circle me-3" alt="{{ doctor.get_full_name() }}"
+                                             style="width: 60px; height: 60px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-light me-3 d-flex align-items-center justify-content-center"
+                                             style="width: 60px; height: 60px;">
+                                            <i class="fas fa-user-md fa-2x text-primary"></i>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div>
+                                            <h6 class="card-title mb-1">Dr. {{ doctor.get_full_name() }}</h6>
+                                            <p class="card-text small text-muted mb-0">{{ doctor.specialization }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if doctor.rating %}
+                                    <div class="mb-3">
+                                        {% for i in range(doctor.rating|round|int) %}
+                                        <i class="fas fa-star text-warning"></i>
+                                        {% endfor %}
+                                        {% for i in range(5 - doctor.rating|round|int) %}
+                                        <i class="far fa-star text-warning"></i>
+                                        {% endfor %}
+                                        <small class="text-muted ms-1">({{ doctor.rating_count }})</small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('main.doctor_detail', id=doctor.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            Profili İncele
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sağ Sidebar -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <!-- Çalışma Saatleri -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-clock text-primary me-2"></i>Çalışma Saatleri
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        {% for schedule in department.schedules %}
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span>{{ schedule.day }}</span>
+                            <span class="text-primary">{{ schedule.hours }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- İletişim -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-phone-alt text-primary me-2"></i>İletişim
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        {% if department.phone %}
+                        <li class="mb-3">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <a href="tel:{{ department.phone }}" class="text-decoration-none">
+                                {{ department.phone }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if department.email %}
+                        <li class="mb-3">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <a href="mailto:{{ department.email }}" class="text-decoration-none">
+                                {{ department.email }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if department.location %}
+                        <li>
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            {{ department.location }}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Randevu Butonu -->
+            <div class="d-grid">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.doctors', department=department.id) }}" 
+                   class="btn btn-primary btn-lg">
+                    <i class="fas fa-calendar-plus me-2"></i>Randevu Al
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                    Randevu için Giriş Yapın
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
