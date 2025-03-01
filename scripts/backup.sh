@@ -3,33 +3,37 @@
 # Exit on error
 set -e
 
-# Configuration
-BACKUP_DIR="/var/backups/hospital_app"
-DB_NAME="hospital_db"
-DB_USER="hospital_user"
-UPLOADS_DIR="/var/www/hospital_app/uploads"
-RETENTION_DAYS=7
+# Get current date for backup name
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="/var/www/hospital_app/backups"
+
+echo "Starting backup process..."
 
 # Create backup directory if it doesn't exist
-mkdir -p "$BACKUP_DIR"
-
-# Generate timestamp
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+sudo mkdir -p $BACKUP_DIR
+sudo chown www-data:www-data $BACKUP_DIR
+sudo chmod 750 $BACKUP_DIR
 
 # Backup database
 echo "Backing up database..."
-PGPASSWORD="your-secure-password" pg_dump -U "$DB_USER" -h localhost "$DB_NAME" > "$BACKUP_DIR/db_$TIMESTAMP.sql"
+cp /var/www/hospital_app/hospital.db "$BACKUP_DIR/hospital_$DATE.db"
 
-# Backup uploads directory
+# Backup uploads
 echo "Backing up uploads..."
-tar -czf "$BACKUP_DIR/uploads_$TIMESTAMP.tar.gz" -C "$(dirname "$UPLOADS_DIR")" "$(basename "$UPLOADS_DIR")"
+tar -czf "$BACKUP_DIR/uploads_$DATE.tar.gz" -C /var/www/hospital_app uploads/
 
-# Compress database backup
-gzip "$BACKUP_DIR/db_$TIMESTAMP.sql"
+# Backup environment file
+echo "Backing up environment file..."
+sudo cp /var/www/hospital_app/.env.production "$BACKUP_DIR/env_$DATE.backup"
 
-# Delete old backups
-find "$BACKUP_DIR" -type f -mtime +$RETENTION_DAYS -delete
+# Set correct permissions
+sudo chown -R www-data:www-data $BACKUP_DIR
+sudo chmod -R 600 $BACKUP_DIR/*
 
-echo "Backup completed successfully!"
-echo "Database: $BACKUP_DIR/db_$TIMESTAMP.sql.gz"
-echo "Uploads: $BACKUP_DIR/uploads_$TIMESTAMP.tar.gz" 
+# Clean old backups (keep last 7 days)
+find $BACKUP_DIR -type f -mtime +7 -delete
+
+echo "Backup completed! Files saved in $BACKUP_DIR"
+echo "Database: hospital_$DATE.db"
+echo "Uploads: uploads_$DATE.tar.gz"
+echo "Environment: env_$DATE.backup" 

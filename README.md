@@ -1,133 +1,109 @@
 # Hospital Management System
 
-A comprehensive hospital management system built with Flask, offering a complete solution for managing hospital operations, appointments, and patient care.
+A Flask-based hospital management system with appointment scheduling, notifications, and monitoring.
 
 ## Features
 
-- 👥 User Management (Patients, Doctors, Staff)
-- 🏥 Department Management
-- 📅 Appointment Scheduling
-- 📊 Administrative Dashboard
-- 📝 Electronic Health Records
-- 💊 Prescription Management
-- 📱 Real-time Notifications
-- 📈 Analytics and Reporting
-- 🔒 Secure Authentication
-- 📨 Email/SMS Notifications
+- User authentication and authorization
+- Appointment scheduling and management
+- Email notifications for appointments
+- Daily reports generation
+- System monitoring with Prometheus and Grafana
+- Secure SSL/TLS encryption
 
-## Tech Stack
+## Requirements
 
-- **Backend**: Flask (Python)
-- **Database**: PostgreSQL
-- **Cache**: Redis
-- **Task Queue**: Celery
-- **Frontend**: Bootstrap, Chart.js
-- **API Documentation**: Swagger/OpenAPI
-- **Authentication**: JWT, OAuth2
+- Python 3.9+
+- Redis (for task queue)
+- Nginx (for reverse proxy)
+- SQLite (database)
 
-## Prerequisites
-
-- Python 3.8+
-- PostgreSQL
-- Redis
-- Node.js (for frontend assets)
-
-## Installation
+## Local Development Setup
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/hospital-management.git
-   cd hospital-management
-   ```
+```bash
+git clone https://github.com/yourusername/hospital_app.git
+cd hospital_app
+```
 
 2. Create and activate virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # or
-   venv\Scripts\activate  # Windows
-   ```
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
 3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-4. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+4. Set up the environment:
+```bash
+cp .env.local .env
+```
 
 5. Initialize the database:
-   ```bash
-   flask db upgrade
-   ```
-
-6. Create admin user:
-   ```bash
-   flask create-admin
-   ```
-
-## Running the Application
-
-1. Start Redis server:
-   ```bash
-   redis-server
-   ```
-
-2. Start Celery worker:
-   ```bash
-   celery -A app.celery worker --loglevel=info
-   ```
-
-3. Start the Flask application:
-   ```bash
-   flask run
-   ```
-
-The application will be available at `http://localhost:5000`
-
-## Development
-
-### Running Tests
-
 ```bash
-pytest
+flask db upgrade
 ```
 
-### Code Style
-
+6. Run the development server:
 ```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run linter
-flake8
-
-# Run type checker
-mypy .
+flask run
 ```
 
-## API Documentation
+## Deployment (Free Options)
 
-API documentation is available at `/api/docs` when running the application.
+1. Clone the repository on your server:
+```bash
+git clone https://github.com/yourusername/hospital_app.git
+cd hospital_app
+```
+
+2. Run the deployment script:
+```bash
+bash scripts/deploy.sh
+```
+
+This will:
+- Set up Python environment
+- Install dependencies
+- Configure Nginx
+- Set up SSL certificate
+- Start the application
+
+3. Set up monitoring (optional):
+```bash
+bash scripts/setup_monitoring.sh
+bash scripts/setup_dashboards.sh
+```
+
+## Free Services Used
+
+- **Domain**: Can use Freenom for free domain
+- **SSL**: Let's Encrypt (free certificates)
+- **Hosting**: Can be deployed on free tier of cloud providers
+- **Database**: SQLite (included)
+- **Monitoring**: Prometheus + Grafana (open source)
+
+## GitHub Actions
+
+The repository includes GitHub Actions for:
+- Running tests
+- Code coverage reporting
+- Automated deployment
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## Security
-
-For security issues, please email security@yourdomain.com instead of using the issue tracker.
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## Support
 

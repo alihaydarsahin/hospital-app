@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -22,7 +23,6 @@ wheels/
 
 # Virtual Environment
 venv/
-env/
 ENV/
 
 # IDE
@@ -30,12 +30,6 @@ ENV/
 .vscode/
 *.swp
 *.swo
-.project
-.pydevproject
-
-# Flask
-instance/
-.webassets-cache
 
 # Database
 *.db
@@ -43,54 +37,26 @@ instance/
 
 # Environment variables
 .env
-.env.*
-!.env.example
+.env.production
 
 # Logs
-logs/
 *.log
+logs/
 
-# Media files
-media/
-uploads/
-static/uploads/
-
-# Temporary files
-*.tmp
-*.temp
+# Local development
 .DS_Store
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Node (if using frontend build)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg 
+# Test coverage
+.coverage
+htmlcov/
+
+# Monitoring
+prometheus/
+grafana/
+
+# Deployment
+deploy.zip 
