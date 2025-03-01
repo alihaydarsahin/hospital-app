@@ -1,0 +1,59 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+        pip install -r requirements.txt
+
+    - name: Run Bandit security scanner
+      run: |
+        bandit -r . -ll -i
+
+    - name: Check dependencies for known vulnerabilities
+      run: |
+        safety check
+
+    - name: Run OWASP ZAP baseline scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: 'http://localhost:8000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Detect-secrets scan
+      uses: reviewdog/action-detect-secrets@v0.11.1
+      with:
+        reporter: github-pr-review
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: 'Dependency Review'
+      uses: actions/dependency-review-action@v3 

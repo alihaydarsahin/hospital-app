@@ -1,0 +1,13 @@
+10020	IGNORE	X-Frame-Options Header Not Set
+10021	IGNORE	X-Content-Type-Options Header Missing
+10034	IGNORE	Heartbleed OpenSSL Vulnerability
+10035	WARN	Strict-Transport-Security Header Not Set
+10038	WARN	Content Security Policy (CSP) Header Not Set
+10040	WARN	Secure Pages Include Mixed Content
+10052	WARN	X-ChromeLogger-Data Header Information Leak
+10098	WARN	Cross-Domain Misconfiguration
+10105	WARN	Weak Authentication Method
+10202	WARN	Absence of Anti-CSRF Tokens
+40025	WARN	Proxy Disclosure
+90022	WARN	Application Error Disclosure
+90033	WARN	Loosely Scoped Cookie 
