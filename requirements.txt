@@ -31,7 +31,7 @@ flower==2.0.1
 
 # API Documentation
 flasgger==0.9.7.1
-apispec==6.3.1
+apispec==6.8.1
 
 # Utils
 Pillow==10.1.0
