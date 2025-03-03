@@ -50,7 +50,7 @@ jobs:
         zip -r deploy.zip . -x "*.git*"
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: deploy-package
         path: deploy.zip 
