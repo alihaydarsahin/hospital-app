@@ -46,7 +46,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Detect-secrets scan
-      uses: reviewdog/action-detect-secrets@v0.11.1
+      uses: reviewdog/action-detect-secrets@v0.28.1
       with:
         reporter: github-pr-review
 
