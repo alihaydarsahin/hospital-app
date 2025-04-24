@@ -13,7 +13,7 @@ Flask-SocketIO==5.3.6
 
 # Database
 SQLAlchemy==2.0.23
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 alembic==1.13.1
 
 # Security
